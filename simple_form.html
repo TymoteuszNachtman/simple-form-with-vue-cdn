@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Form with Vue CDN | by Tymoteusz Nachtman</title>
+</head>
+<body style="font-family:'Open Sans',Arial,sans-serif;padding-top:10rem;min-height:1200px;">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <!-- Simple, example form app using vue -->
+  <!-- All data is not being sent anywhere :)  -->
+  <div id="app">
+
+    <Transition name="slide-up">
+      <div v-if="state.showForm">
+
+        <form @submit.prevent="handleSubmit()" class="max-w-[1080px] w-[80%] m-auto">
+
+          <div class="grid gap-6 mb-6 md:grid-cols-2">
+            <div class="firstName">
+              <label for="firstName" class="block mb-2 text-sm font-medium" :class="[data.firstName.isValid ? '' : errorClasses.label]">First Name</label>
+              <input type="text" id="firstName" class="border text-sm rounded-lg block w-full p-2.5" :style="[data.firstName.isValid ? '' : 'background-color: rgb(254 242 242);']" :class="[data.firstName.isValid ? '' : errorClasses.input]" placeholder="First Name" v-model.trim="data.firstName.value" @input="validateInput(data.firstName)">
+              <Transition name="slide-up">
+                <p class="mt-2 text-sm text-red-600" v-if="!data.firstName.isValid">{{ data.firstName.errorMessage }} </p> 
+              </Transition>
+            </div>
+            <div class="lastName">
+              <label for="lastName" class="block mb-2 text-sm font-medium" :class="[data.lastName.isValid ? '' : errorClasses.label]">Last Name</label>
+              <input type="text" id="lastName" class="border text-sm rounded-lg block w-full p-2.5" :style="[data.lastName.isValid ? '' : 'background-color: rgb(254 242 242);']" :class="[data.lastName.isValid ? '' : errorClasses.input]" placeholder="Last Name" v-model.trim="data.lastName.value" @input="validateInput(data.lastName)">
+              <Transition name="slide-up">
+                <p class="mt-2 text-sm text-sm text-red-600" v-if="!data.lastName.isValid"> {{ data.lastName.errorMessage }} </p> 
+              </Transition>
+            </div>
+          </div>
+    
+          <!-- Salary -->
+          <div class="grid gap-2 mb-6">
+            <label for="selectedItem" class="block text-sm font-medium text-gray-900" :class="[data.selectedItem.isValid ? '' : errorClasses.label]">What is your salary?</label>
+            <select id="selectedItem" v-model="data.selectedItem.value" @change="validateInput(data.selectedItem)" :class="[data.selectedItem.isValid ? '' : 'text-red-500 border-red-500']" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+              <option value="" disabled class="text-gray-400">Choose Salary</option>
+              <option value="min" class="text-gray-800">less than 2500$</option>
+              <option value="tier1" class="text-gray-800">2501$ - 4000$</option>
+              <option value="tier2" class="text-gray-800">4001$ - 8000$</option>
+              <option value="max" class="text-gray-800">more than 10000$</option>
+              <option value="not_working" class="text-gray-800">I'm not working</option>
+            </select>
+            <Transition name="slide-up">
+              <p class="text-sm" :class="[data.selectedItem.isValid ? '' : errorClasses.p]" v-if="!data.selectedItem.isValid"> {{ data.selectedItem.errorMessage }} </p>
+            </Transition>
+          </div>
+    
+          <!-- IF NOT WORKING -->
+          <Transition name="slide-up">
+            <div v-if="data.selectedItem.value == 'not_working'" class="grid gap-6 mb-6 md:grid-cols-1">
+              <div class="l1">
+                <label for="expectedSalary" class="block mb-2 text-sm font-medium text-gray-900">How much would you want to earn?</label>
+                <input type="number" min="0" max="15000" id="expectedSalary" class="border text-sm rounded-lg block w-full p-2.5" :style="[data.expectedSalary.isValid ? '' : 'background-color: rgb(254 242 242);']" :class="[data.expectedSalary.isValid ? '' : errorClasses.input]" 
+                  placeholder="Expected Salary" @input="validateInput(data.expectedSalary)" v-model.number="data.expectedSalary.value">
+                  <Transition name="slide-up">
+                    <p class="mt-2 text-sm" :class="[data.expectedSalary.isValid ? '' :  errorClasses.p]" v-if="!data.expectedSalary.isValid"> {{ data.expectedSalary.errorMessage }} </p> 
+                  </Transition>
+              </div>
+            </div>
+          </Transition>
+          
+          <!-- mood -->
+          <div id="range-wrapper" class="my-10 ">
+            <div class="range">
+              <div id="mood"></div>
+              <p id="range-title" class="text-lg mt-4 mb-8" :class="{'text-red-800': !data.mood.isValid}">How well are you feeling?</p>
+              <div id="debt-amount-slider" :class="{'text-red-800': !data.mood.isValid}">
+                <input type="radio" name="debt-amount" id="1" value="1" v-model="data.mood.value">
+                <label for="1" data-amount="1"></label>
+                <input type="radio" name="debt-amount" id="2" value="2" v-model="data.mood.value">
+                <label for="2" data-amount="2"></label>
+                <input type="radio" name="debt-amount" id="3" value="3" v-model="data.mood.value">
+                <label for="3" data-amount="3"></label>
+                <input type="radio" name="debt-amount" id="4" value="4" v-model="data.mood.value">
+                <label for="4" data-amount="4"></label>
+                <input type="radio" name="debt-amount" id="5" value="5" v-model="data.mood.value">
+                <label for="5" data-amount="5"></label>
+                <input type="radio" name="debt-amount" id="6" value="6" v-model="data.mood.value">
+                <label for="6" data-amount="6"></label>
+                <input type="radio" name="debt-amount" id="7" value="7" v-model="data.mood.value">
+                <label for="7" data-amount="7"></label>
+                <input type="radio" name="debt-amount" id="8" value="8" v-model="data.mood.value">
+                <label for="8" data-amount="8"></label>
+                <input type="radio" name="debt-amount" id="9" value="9" v-model="data.mood.value">
+                <label for="9" data-amount="9"></label>
+                <input type="radio" name="debt-amount" id="10" value="10" v-model="data.mood.value">
+                <label for="10" data-amount="10"></label>
+                <div id="debt-amount-pos"></div>
+              </div>
+            </div>
+            <Transition name="slide-up">
+              <div v-if="data.mood.value && data.mood.value <= 5" class="range-message text-xl" style="margin-top:2rem;">
+                <div class="title text-xl my-2">What happened that your mood is 50% or less?</div>
+                <input type="text" id="why_bad_mood" class="border text-sm rounded-lg block w-full p-2.5" :class="[data.why_bad_mood.isValid ? '' :  errorClasses.input]" :style="[data.why_bad_mood.isValid ? '' : 'background-color: rgb(254 242 242);']"
+                  placeholder="Tell me about it..." @input="validateInput(data.why_bad_mood)" v-model="data.why_bad_mood.value">
+                <Transition name="slide-up">
+                  <p class="mt-2 text-sm" :class="[data.why_bad_mood.isValid ? '' : errorClasses.p]" v-if="!data.why_bad_mood.isValid"> {{ data.why_bad_mood.errorMessage }} </p> 
+                </Transition>
+              </div>
+            </Transition>
+          </div>
+          <div class="mb-2">
+            <Transition name="slide-up" mode="out-in">
+              <div v-if="!data.mood.isValid" class="error-message m-auto text-center block mb-2 mt-2 text-sm font-medium" :class="[data.mood.isValid ? '' : errorClasses.label]">
+                {{ data.mood.errorMessage }}
+              </div>
+            </Transition>
+          </div>
+    
+          <!-- additionalInfo -->
+          <div class="grid gap-6 mb-6">
+            <div class="additionalInfo">
+              <label for="additionalInfo" class="block mb-2 text-sm font-medium" :class="[data.additionalInfo.isValid ? '' : errorClasses.label]">What else can you tell me?</label>
+              <input type="text" id="additionalInfo" class="border text-sm rounded-lg block w-full p-2.5" :class="[data.additionalInfo.isValid ? '' : errorClasses.input]" :style="[data.additionalInfo.isValid ? '' : 'background-color: rgb(254 242 242);']"
+                placeholder="Additional Info" @input="validateInput(data.additionalInfo)" v-model="data.additionalInfo.value">
+              <Transition name="slide-up">
+                <p class="mt-2 text-sm" :class="[data.additionalInfo.isValid ? '' : errorClasses.p]" v-if="!data.additionalInfo.isValid"> {{ data.additionalInfo.errorMessage }} </p> 
+              </Transition>
+            </div>
+          </div>
+    
+          <!-- SUBMIT BUTTON -->
+          <div class="submit">
+            <button type="submit" :disabled="state.formPending" 
+              class="py-2.5 px-5 me-2 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200"
+              :class="[state.formPending ? '' : 'hover:text-white hover:bg-gray-900']">
+              <span v-if="state.formPending">
+                <div role="status" class="inline" style="margin-right:5px;">
+                  <svg aria-hidden="true" class="inline w-8 h-8 text-gray-200 animate-spin fill-purple-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                      <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                  </svg>
+                </div>
+                <span class="ml-1">Sending</span>
+              </span>
+              <span v-else>
+                Send
+              </span>
+            </button>
+          </div>
+          
+        </form>
+
+      </div>
+    </Transition>
+
+    <div class="grid gap-2 max-w-[1080px] w-[80%] m-auto">
+      <Transition name="fade">
+        <div v-if="state.formMessage.show && !state.formValid" class="text-lg">
+          <p style="border: 1px solid;padding-bottom: 0.5rem;" class="mt-2 text-lg font-bold text-center rounded-lg border border-red-500 border-2 px-3 py-2 text-sm text-red-500"> {{ state.formMessage.text }} </p>
+        </div>
+        <div v-if="state.success" class="text-lg max-w-[32rem] text-center m-auto">
+          <div class="my-6">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" /><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" /></svg>
+          </div>
+          <Transition name="fade">
+            <div v-if="state.formMessage.show && state.formValid" class="text-lg">
+              <p class="mt-2 ml-1 text-lg text-center rounded-lg font-bold px-3 py-2 text-sm text-green-500"> {{ state.formMessage.text }} </p>
+              <button type="button" class="text-center w-full mx-auto cursor-pointer inline-block py-2.5 px-5 my-4 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-900 hover:text-white" @click="() => {state.success = false; state.showForm = true;}">
+                Send another answer
+              </button>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </div>
+
+  </div>
+  
+  <!-- VUE -->
+  <script>
+    const { createApp, ref, reactive, watch } = Vue
+    const API_URL = "/wp-json/nofchurch/v2/feedback-form"
+  
+    createApp({
+      setup() {
+        const data = reactive({
+          firstName: {
+            type: 'text',
+            value: ref(null),
+            errorMessage: 'Fill this field',
+            isValid: true,
+            required: true,
+          },
+          lastName: {
+            type: 'text',
+            value: ref(null),
+            errorMessage: 'Fill this field',
+            isValid: true,
+            required: true,
+          },
+          selectedItem: {
+            type: 'select',
+            value: ref(''),
+            errorMessage: 'Choose from the list',
+            isValid: true,
+            required: true,
+          },
+          expectedSalary:{type: 'number+', value: ref(null), errorMessage: 'Type valid number', isValid: true},
+          mood:{
+            type: 'radio',
+            value: ref(null),
+            errorMessage: 'Choose one option',
+            isValid: true,
+            required: true,
+          },
+          why_bad_mood:{type: 'text', value: ref(null), errorMessage: 'Fill this field', isValid: true},
+          additionalInfo:{type: 'text', value: ref(null), errorMessage: 'Fill this field', isValid: true, required: true},
+        })
+        const state = reactive({
+          success: false,
+          showForm: true,
+          formValid: true,
+          formMessage: {
+            show: false,
+            text: '',
+          },
+          formPending: false,
+        })
+        const errorClasses = {
+          input: 'bg-red-50 border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500',
+          label: 'text-red-700',
+          p: 'text-red-600',
+          select: 'text-red-600 border-red-600',
+        }
+
+        const validateInput = (input) => {
+          // Validates input depending on input type
+          console.log(input.value);
+          switch(input.type){
+            case 'select':
+            case 'text':
+              if(!input.value || input.value === ' '){
+                if(input.required) input.isValid = false;
+              }else{
+                input.isValid = true;
+              }
+              break;
+            case 'number':
+              if(input.value === null || isNaN(input.value) || input.value === ''){
+                if(input.required) input.isValid = false;
+              }else{
+                console.log(input.value);
+                input.isValid = true;
+              }
+              break;
+            case 'number+':
+              if(!input.value || isNaN(input.value)){
+                if(input.required) input.isValid = false;
+              }else{
+                input.isValid = true;
+              }
+              break;
+            case 'numberN':
+              if(input.value === null || isNaN(input.value) || input.value === '' || input.value < 0){
+                if(input.required){
+                  input.isValid = false;
+                }else{
+                  input.isValid = true;
+                }
+              }else{
+                input.isValid = true;
+              }
+              break;
+            case 'radio':
+              if(input.value === null){
+                if(input.required) input.isValid = false;
+              }else{
+                input.isValid = true;
+              }
+          }
+        }
+
+        watch(() => data.mood.value, (newValue) => {
+          if(data.mood.value <= 5){
+            console.log('MOOD UNDER 50%');
+          }else{
+            data.why_bad_mood.value = null;
+          }
+          if(newValue){ 
+            // ensures setting null after clearing form doesn't throw error
+            validateInput(data.mood);
+          }
+        })
+
+        function fetchMock() {
+          // Simulate a delay using setTimeout
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              // Mock data
+              const mockData = {
+                id: 1,
+                title: "Mock Data",
+                content: "This is some mock data.",
+                userMessage: 'Thank you for submitting data!',
+                success: true,
+              };
+
+              // Resolve the promise with the mock data
+              resolve({
+                status: 200,
+                json: () => Promise.resolve(mockData),
+              });
+            }, 2000); // Adjust the timeout duration as needed
+          });
+        }
+
+        const clearFormData = () => {
+          // Clears form inputs and resets data items values
+          for(const [key, items] of Object.entries(data)){
+            if(items.type == 'select'){
+              items.value = '';
+            }else{
+              items.value = null;
+            }
+          }
+        }
+
+        const handleSubmit = async () => {
+          // handles form submit
+          state.formValid = true;
+          state.formPending = true;
+          state.formMessage.show = false;
+
+          // Additional ommitting not required values
+          data.mood.value <= 5 ? data.why_bad_mood.required = true : data.why_bad_mood.required = false;
+
+          // Changing required values depending on state
+          data.selectedItem.value === 'not_working' ? data.expectedSalary.required = true : data.expectedSalary.required = false;
+
+          // validate all inputs (again) before submitting
+          const formData = {};
+          let firstScrolled = false;
+          for(const [key, items] of Object.entries(data)){
+            validateInput(data[key]);
+            if(!items.isValid || items.value === null || items.value === ''){
+              if(items.required){
+                state.formValid = false;
+                // Scroll to first invalid input
+                if(!firstScrolled){
+                  document.querySelector(`#${key}`).style.scrollMargin = '2rem';
+                  document.querySelector(`#${key}`) ? document.querySelector(`#${key}`).scrollIntoView({behavior: "smooth"}) : console.log('Cannot scroll to view: ' + key);
+                  firstScrolled = true;
+                }
+              }
+            }
+            formData[key] = items.value;
+          }
+
+          state.formMessage.show = false; // Hide previous message
+          if(state.formValid){
+            console.log(formData); // Just for testing purposes
+            try {
+              console.log('Starting fetch...');
+              fetchMock().then(response => {
+                if(response.status !== 200){
+                  console.log(
+                      "Looks like there was a problem. Status Code: " +
+                      response.status
+                  );
+                  state.formMessage.show = true;
+                  state.formMessage.text = 'There was an error submitting your form.';
+                  state.formPending = false;
+                  state.formValid = false;
+                  return;
+                }
+
+                response.json().then(data => {
+                  state.formPending = false;
+                    if(data.success){
+                      console.log(data);
+                      console.log(data.devInfo);
+                      state.success = true;
+                      clearFormData();
+                      state.showForm = false;
+                      document.querySelector(`#app`) ? document.querySelector(`#app`).scrollIntoView({behavior: "smooth"}) : console.log('Cannot scroll to view: #app');
+                      setTimeout(() => {
+                        state.formMessage.show = true;
+                        state.formMessage.text = data.userMessage;
+                      }, 500);
+                    }else{
+                      console.log('Server response is: failed');
+                      console.log(state.devInfo);
+                      state.success = false;
+                      state.showForm = true;
+                      state.formMessage.show = true;
+                      state.formMessage.text = data.userMessage;
+                    }
+                });
+              }).catch(error => {
+                console.log(error);
+                state.formMessage.show = true;
+                state.formMessage.text = 'Cannot send the form. Please try again later.';
+                state.formPending = false;
+                state.formValid = false;
+                return;
+              });
+            } catch (error) {
+              console.log('error');
+              console.log(error);
+            }
+          }else{
+            console.log('Form not completed');
+            state.formMessage.show = true;
+            state.formMessage.text = 'Form is not completed. Fill out required fields!';
+            state.formPending = false;
+          }
+        }
+
+        return{
+          state,
+          data,
+          errorClasses,
+          validateInput,
+          handleSubmit
+        }
+      }
+    }).mount('#app')
+  </script>
+
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  position: relative;
+  transition: all .5s ease-in-out;
+  opacity: 1;
+}
+.fade-enter-to,
+.fade-leave-from{
+  opacity: 1;
+}
+.fade-enter-from,
+.fade-leave-to{
+  opacity: 0;
+}
+
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  position: relative;
+  transition: all .3s cubic-bezier(.17,.67,.26,1.23);
+}
+
+.slide-up-enter-to,
+.slide-up-leave-from{
+  top: 0px;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  top: 10px;
+  transform: translateY(30px);
+  opacity: 0;
+}
+
+
+.success-animation {
+  margin: 150px auto;
+}
+
+.checkmark {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #4bb71b;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px #4bb71b;
+  animation: fill 0.4s ease-in-out 0.4s forwards,
+    scale 0.3s ease-in-out 0.9s both;
+  animation-delay: 300ms;
+  position: relative;
+  top: 5px;
+  right: 5px;
+  margin: 0 auto;
+}
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #4bb71b;
+  fill: #fff;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scale {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 30px #4bb71b;
+  }
+}
+
+#range-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.range {
+  width: 90%;
+  max-width: 60rem;
+}
+.range #range-title {
+  margin-top: 0;
+  font-weight: 400;
+  font-size: 1.6rem;
+  text-align: center;
+}
+.range #debt-amount-slider {
+  display: flex;
+  flex-direction: row;
+  align-content: stretch;
+  position: relative;
+  width: 100%;
+  height: 50px;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+.range #debt-amount-slider::before {
+  content: " ";
+  position: absolute;
+  height: 2px;
+  width: 100%;
+  width: calc(100% * (9 / 10));
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #000;
+}
+.range #debt-amount-slider input, .range #debt-amount-slider label {
+  box-sizing: border-box;
+  flex: 1;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  cursor: pointer;
+}
+.range #debt-amount-slider label {
+  display: inline-block;
+  position: relative;
+  width: 20%;
+  height: 100%;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+.range #debt-amount-slider label::before {
+  content: attr(data-amount);
+  position: absolute;
+  left: 50%;
+  padding-top: 10px;
+  transform: translate(-50%, 45px);
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0.85;
+  transition: all 0.15s ease-in-out;
+}
+.range #debt-amount-slider label::after {
+  content: " ";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  z-index: 1;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+@media(max-width: 512px){
+  .range #debt-amount-slider label::after{
+    width: 20px;
+    height: 20px;
+  }
+}
+.range #debt-amount-slider label:hover::after {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+.range #debt-amount-slider input {
+  display: none;
+}
+.range #debt-amount-slider input:checked + label::before {
+  font-weight: 800;
+  opacity: 1;
+}
+.range #debt-amount-slider input:checked + label::after {
+  border-width: 4px;
+  transform: translate(-50%, -50%) scale(0.75);
+}
+.range #debt-amount-slider input:checked ~ #debt-amount-pos {
+  opacity: 1;
+}
+.range #debt-amount-slider input:checked:nth-child(1) ~ #debt-amount-pos {
+  left: 5%;
+}
+.range #debt-amount-slider input:checked:nth-child(3) ~ #debt-amount-pos {
+  left: 15%;
+}
+.range #debt-amount-slider input:checked:nth-child(5) ~ #debt-amount-pos {
+  left: 25%;
+}
+.range #debt-amount-slider input:checked:nth-child(7) ~ #debt-amount-pos {
+  left: 35%;
+}
+.range #debt-amount-slider input:checked:nth-child(9) ~ #debt-amount-pos {
+  left: 45%;
+}
+.range #debt-amount-slider input:checked:nth-child(11) ~ #debt-amount-pos {
+  left: 55%;
+}
+.range #debt-amount-slider input:checked:nth-child(13) ~ #debt-amount-pos {
+  left: 65%;
+}
+.range #debt-amount-slider input:checked:nth-child(15) ~ #debt-amount-pos {
+  left: 75%;
+}
+.range #debt-amount-slider input:checked:nth-child(17) ~ #debt-amount-pos {
+  left: 85%;
+}
+.range #debt-amount-slider input:checked:nth-child(19) ~ #debt-amount-pos {
+  left: 95%;
+}
+.range #debt-amount-slider #debt-amount-pos {
+  display: block;
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border-radius: 50%;
+  transition: all 0.15s ease-in-out;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  opacity: 0;
+  z-index: 2;
+}
+.range:valid #debt-amount-slider input + label::before {
+  transform: translate(-50%, 45px) scale(0.9);
+  transition: all 0.15s linear;
+}
+.range:valid #debt-amount-slider input:checked + label::before {
+  transform: translate(-50%, 45px) scale(1.1);
+  transition: all 0.15s linear;
+}
+.range + button {
+  display: block;
+  position: relative;
+  margin: 56px auto 0;
+  padding: 10px 20px;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  transition: all 0.15s ease-in-out;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 8px;
+  outline: 0;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  cursor: pointer;
+}
+.range + button:hover {
+  background: #000;
+  color: #fff;
+}
+.range + button:hover:active {
+  transform: scale(0.9);
+}
+.range + button:focus {
+  background: #4caf50;
+  border-color: #4caf50;
+  color: #fff;
+  pointer-events: none;
+}
+.range + button:focus::before {
+  -webkit-animation: spin 1s linear infinite;
+          animation: spin 1s linear infinite;
+}
+.range + button::before {
+  display: inline-block;
+  width: 0;
+  opacity: 0;
+  content: "";
+  font-family: "Font Awesome 5 Pro";
+  font-weight: 900;
+  margin-right: 0;
+  transform: rotate(0deg);
+}
+.range:invalid + button {
+  pointer-events: none;
+  opacity: 0.25;
+}
+
+@-webkit-keyframes spin {
+  from {
+    transform: rotate(0deg);
+    width: 24px;
+    opacity: 1;
+    margin-right: 12px;
+  }
+  to {
+    transform: rotate(360deg);
+    width: 24px;
+    opacity: 1;
+    margin-right: 12px;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+    width: 24px;
+    opacity: 1;
+    margin-right: 12px;
+  }
+  to {
+    transform: rotate(360deg);
+    width: 24px;
+    opacity: 1;
+    margin-right: 12px;
+  }
+}
+</style>
+
+
+</body>
+</html>
